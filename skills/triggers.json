@@ -1,0 +1,172 @@
+{
+  "_doc": "Skill-trigger rules for hook.mjs. kind: start (session start), prompt (the user message matches re), tool (a tool call; re matches tool name + input), stop. A rule naming a skill missing from the session is skipped, so project skills (art-direction, project-checks, dev-env-pitfalls) only fire in projects that have them.",
+  "maxPerPrompt": 3,
+  "rules": [
+    {
+      "kind": "prompt",
+      "re": "\\b(lead|sub-?lead|lanes?|orchestrat\\w*|goals?|status|scheduled tasks?|stalled|nothing (is )?running|usage|limited account|wak(e|ing)[ -]?up)\\b",
+      "skills": [
+        "project-orchestration"
+      ],
+      "why": "the shared Lead and lane-thread workflow"
+    },
+    {
+      "kind": "prompt",
+      "re": "\\b(bug|debug\\w*|diagnos\\w*|red tests?|known.?reds?|failing|fails?|broken|crash\\w*|flaky|stutter\\w*|regression|hitch\\w*)\\b",
+      "skills": [
+        "diagnosing-bugs"
+      ],
+      "why": "diagnosis loop: red-capable command first"
+    },
+    {
+      "kind": "prompt",
+      "re": "\\b(should we|what if|could we|how about|idea|approv\\w*|permission|go.?no.?go|ask (me|the user))\\b",
+      "skills": [
+        "scope-check"
+      ],
+      "why": "assume yes; proceed, record or drop"
+    },
+    {
+      "kind": "start",
+      "re": "",
+      "skills": [
+        "method-check"
+      ],
+      "why": "read LESSONS.md and question the method"
+    },
+    {
+      "kind": "compact",
+      "re": "",
+      "skills": [
+        "method-check"
+      ],
+      "why": "read LESSONS.md and question the method"
+    },
+    {
+      "kind": "prompt",
+      "re": "\\b(wrong|not working|you said|didn'?t work|doesn'?t work|still (broken|wrong)|why did|lessons?)\\b",
+      "skills": [
+        "method-check"
+      ],
+      "why": "learn from the correction"
+    },
+    {
+      "kind": "compact",
+      "re": "",
+      "skills": [
+        "token-economy"
+      ],
+      "why": "small context, one blocking wait"
+    },
+    {
+      "kind": "tool",
+      "re": "^(Agent|Task)$|delegate_task|t3_thread_launch|create_threads",
+      "skills": [
+        "delegation-routing"
+      ],
+      "why": "model, effort and account for the launch"
+    },
+    {
+      "kind": "prompt",
+      "re": "\\b(delegat\\w*|successor|relaunch|launch (an? )?(agent|lane|thread)|which model|effort|fable|opus)\\b",
+      "skills": [
+        "delegation-routing"
+      ],
+      "why": "model, effort and account"
+    },
+    {
+      "kind": "prompt",
+      "re": "\\b(review|commit|merge|milestone|done claim)\\b",
+      "skills": [
+        "codex-review"
+      ],
+      "why": "when a Codex review is required"
+    },
+    {
+      "kind": "bash",
+      "re": "\\bgit\\s+(commit|merge|push)\\b",
+      "skills": [
+        "codex-review"
+      ],
+      "why": "review before commits and merges"
+    },
+    {
+      "kind": "prompt",
+      "re": "\b(implement|build|add|fix|improve|done|done bar|judge|judging|scores?|checklist|polish|timebox|bench(es)?|quality|rejected|looks? wrong|reference)\b",
+      "skills": [
+        "checks-not-scores"
+      ],
+      "why": "sort checks (measurable, look, motion and feel), judge kits, gates before judges"
+    },
+    {
+      "kind": "prompt",
+      "re": "\\b(tests?|probes?|gates?|asserts?|golden|snapshot|benchmark|flaky|determinis\\w*|seed)\\b",
+      "skills": [
+        "trustworthy-checks"
+      ],
+      "why": "checks that can fail, red first"
+    },
+    {
+      "kind": "edit",
+      "re": "(^|[/\\\\])(tests?|__tests__|spec)[/\\\\]|\\.(test|spec)\\.[cm]?[jt]sx?$|_selftest\\.mjs$",
+      "skills": [
+        "trustworthy-checks"
+      ],
+      "why": "writing a check"
+    },
+    {
+      "kind": "bash",
+      "re": "vitest|playwright|\\b(npm|pnpm|yarn) (run )?test|node\\s+(\\S+\\s+)*--test\\b|Build\\.bat|\\bffmpeg\\b|npm run dev|\\bvite\\b|chrome|heavy\\.mjs",
+      "skills": [
+        "machine-resources",
+        "resource-optimizer"
+      ],
+      "why": "heavy job: through heavy.mjs (slot and memory cap), stopped when done"
+    },
+    {
+      "kind": "prompt",
+      "re": "\\b(KILLED|kills\\.log|mem(ory)?[- ]caps?|memory guard|out of memory|heap (limit|out)|leak(s|ed|ing)?)\\b",
+      "skills": [
+        "machine-resources"
+      ],
+      "why": "memory caps: a kill line means your job leaked"
+    },
+    {
+      "kind": "edit",
+      "re": "LESSONS.md$",
+      "skills": [
+        "method-check"
+      ],
+      "why": "a new lesson: fold groups into skills"
+    },
+    {
+      "kind": "prompt",
+      "re": "\b(look|style|colou?rs?|menus?|ui|art|visuals?|sounds?|voices?|names?|designw*)\b",
+      "skills": [
+        "art-direction"
+      ],
+      "why": "the project style guide"
+    },
+    {
+      "kind": "prompt",
+      "re": "\b(tests?|checks?|gates?|done|verify|benchmarks?|implementw*|fixw*|add)\b",
+      "skills": [
+        "project-checks"
+      ],
+      "why": "this project's gates and check kit"
+    },
+    {
+      "kind": "bash",
+      "re": "\b(git (commit|push|merge|worktree)|npm|npx|node|python|godot|dotnet|cargo|gradle)\b",
+      "skills": [
+        "dev-env-pitfalls"
+      ],
+      "why": "known shell and toolchain traps in this project"
+    }
+  ],
+  "stop": {
+    "heavyProcess": "chrome|chrome-headless-shell|msedge|blender|godot|unity|UnrealEditor|cl|link|ffmpeg|java|gradle",
+    "heavyNodeCmd": "vite|playwright|vitest|webpack|next dev|http-server|serve\\b|esbuild --serve",
+    "ignoreCmd": "mcp|skill-triggers|t3code"
+  }
+}
